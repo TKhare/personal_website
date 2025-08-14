@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tejas Khare</title>
+  <style>
+    /* Minimal visuals for the effect only */
+    .projectile {
+      position: fixed; width: 8px; height: 8px; border-radius: 50%;
+      background: black; left: 0; top: 0; transform: translate(-50%,-50%);
+      transition: transform 1400ms cubic-bezier(.2,.7,.1,1); /* ~30% speed (slower) */
+      pointer-events: none; z-index: 9999;
+    }
+    /* Full-screen cover we "cut a hole" into using a mask */
+    .reveal-cover {
+      position: fixed; inset: 0; background: white; z-index: 9998;
+      /* Start with a tiny transparent hole at var(--cx), var(--cy) */
+      --cx: 50vw; --cy: 50vh; --r: 0px;
+      /* Standard + WebKit masks so the center is transparent (reveals page), outside is opaque */
+      mask-image: radial-gradient(circle var(--r) at var(--cx) var(--cy),
+                                  transparent 0, transparent calc(var(--r) + 0.1px),
+                                  black calc(var(--r) + 0.2px));
+      -webkit-mask-image: radial-gradient(circle var(--r) at var(--cx) var(--cy),
+                                  transparent 0, transparent calc(var(--r) + 0.1px),
+                                  black calc(var(--r) + 0.2px));
+    }
+    /* Optional quick white flash on expand (subtle) */
+    .flash {
+      position: fixed; inset: 0; background: white; opacity: 0;
+      animation: flash 700ms ease-out forwards; pointer-events: none; z-index: 9997;
+    }
+    @keyframes flash { 25% {opacity:.4} 100% {opacity:0} }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .projectile, .reveal-cover, .flash { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Container for consistent width -->
+  <div id="container" style="max-width: 600px; margin: 0 auto;">
+
+    <!-- Top navigation -->
+    <table width="100%">
+      <tr>
+        <td align="left"><strong>Tejas Khare</strong></td>
+        <td align="right" style="width: 200px;">
+          <a class="fx" href="projects/">Projects</a> &nbsp;
+          <a class="fx" href="#thoughts">Thoughts</a>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Main text -->
+    <div style="margin-top: 40px;">
+      <p>
+        Hi, I'm Tejas! I'm studying CS & Math at Georgia Tech.
+        <br><br>
+        I focus on computer systems and machine learning, with the goal of making ML more efficient and ultimately more intelligent.
+        <br><br>
+        I also will be <a class="fx" href="/journal/">journal</a>ing my progress on my work and experiences. 
+        <br><br>
+        Check out my <a class="fx" href="#projects">projects</a>!
+        <br>
+      </p>
+    </div>
+
+    <!-- Social links (gap, left-aligned) -->
+    <div style="margin-top: 40px;">
+      <a class="fx" href="https://github.com/tkhare">Github</a>&nbsp;&nbsp;&nbsp;&nbsp;
+      <a class="fx" href="https://x.com/Tslice0">Twitter</a>
+    </div>
+
+    <!-- Simple anchors so hash links exist -->
+    <div id="projects" style="margin-top: 600px;">Projects section…</div>
+    <div id="thoughts" style="margin-top: 600px;">Thoughts section…</div>
+
+  </div>
+
+  <script>
+    // Utility: animate the expanding mask radius with JS for broad support
+    function animateReveal(cover, from, to, duration) {
+      const start = performance.now();
+      return new Promise(resolve => {
+        function frame(now) {
+          const t = Math.min(1, (now - start) / duration);
+          const r = from + (to - from) * t;
+          cover.style.setProperty('--r', r + 'px');
+          if (t < 1) requestAnimationFrame(frame); else resolve();
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      const a = e.target.closest('a.fx');
+      if (!a) return;
+
+      // Respect reduced motion
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      // Only plain left-click
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      const href = a.getAttribute('href') || '';
+      const isHash = href.startsWith('#');
+
+      e.preventDefault();
+
+      // Projectile start (clicked link center)
+      const rect = a.getBoundingClientRect();
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 2;
+
+      // End point: exact center of the viewport (you said this looks perfect)
+      const endX = Math.round(window.innerWidth / 2);
+      const endY = Math.round(window.innerHeight / 2);
+
+      // Create projectile, fly to center slowly (1400ms)
+      const p = document.createElement('div');
+      p.className = 'projectile';
+      document.body.appendChild(p);
+      p.style.transform = `translate(${startX}px, ${startY}px)`;
+      requestAnimationFrame(() => {
+        p.style.transform = `translate(${endX}px, ${endY}px)`;
+      });
+
+      p.addEventListener('transitionend', async () => {
+        p.remove();
+
+        // Create full-screen cover that we'll "cut a hole" into
+        const cover = document.createElement('div');
+        cover.className = 'reveal-cover';
+        // Center of the hole = where the projectile landed
+        cover.style.setProperty('--cx', endX + 'px');
+        cover.style.setProperty('--cy', endY + 'px');
+        // Start with a tiny hole
+        cover.style.setProperty('--r', '0px');
+        document.body.appendChild(cover);
+
+        // Optional flash for punch
+        const flash = document.createElement('div');
+        flash.className = 'flash';
+        document.body.appendChild(flash);
+
+        // If this is a same-page link, scroll to the target *while covered* so reveal shows the new section
+        if (isHash) {
+          const tgt = document.querySelector(href);
+          if (tgt) {
+            // Jump instantly; no smooth scroll (keeps it minimal and hidden by cover)
+            tgt.scrollIntoView({ block: 'start' });
+            // Update the URL hash to match
+            if (location.hash !== href) history.replaceState(null, '', href);
+          }
+        }
+
+        // Compute radius large enough to reveal the whole page
+        const maxR = Math.hypot(window.innerWidth, window.innerHeight);
+
+        // Animate the hole expanding (700ms looks good with the slower projectile)
+        await animateReveal(cover, 0, maxR, 2000);
+
+        // Cleanup and navigate if external
+        cover.remove();
+        flash.remove();
+
+        if (!isHash) {
+          window.location.href = href;
+        }
+      }, { once: true });
+    });
+  </script>
+</body>
+</html>
