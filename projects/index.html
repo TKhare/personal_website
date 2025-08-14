@@ -9,7 +9,7 @@
     h1, h2 { margin-top: 40px; }
     hr { margin: 20px 0; }
     .project { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
-    .project:nth-of-type(even) { flex-direction: row-reverse; }
+    /* .project:nth-of-type(even) { flex-direction: row-reverse; } */
     .project img { max-width: 45%; height: auto; border-radius: 4px; }
     .project-info { flex: 1; }
     .project-info h3 { margin: 0 0 8px; }
@@ -41,39 +41,12 @@
 
     <!-- Jumpseat -->
     <div class="project">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/8/88/Plane_icon.svg" alt="Airplane icon">
+      <img src="/images/jumpseat.png" alt="Airplane icon">
       <div class="project-info">
         <h3><a href="https://jumpseatapp.com/">Jumpseat</a></h3>
         <p>
           Travel platform for college students with streamlined flight search and booking helpers; built for fast,
-          student-focused trip planning. <!-- site copy; technical details can be expanded later -->
-        </p>
-      </div>
-    </div>
-
-    <h2>Previous</h2>
-    <hr>
-
-    <!-- HTMLow -->
-    <div class="project">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/Computer_vision.jpg" alt="Computer vision illustration">
-      <div class="project-info">
-        <h3>HTMLow</h3>
-        <p>
-          Converts whiteboard drawings to working webpages: OpenCV pipeline extracts text/shapes → Python processing →
-          Flask app renders structured HTML/CSS.
-        </p>
-      </div>
-    </div>
-
-    <!-- COVIDTracer -->
-    <div class="project">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/d/d1/Network_diagram.svg" alt="Network graph diagram">
-      <div class="project-info">
-        <h3>COVIDTracer</h3>
-        <p>
-          Automated contact tracing: Bluetooth proximity capture (client) + Flask backend building a user graph; uses
-          DFS/Dijkstra’s to trace exposure paths and compute reachability.
+          student-focused trip planning. Includes airfare tracker powered by EC2 + webscrapers and  <!-- site copy; technical details can be expanded later -->
         </p>
       </div>
     </div>
