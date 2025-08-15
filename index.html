@@ -81,18 +81,18 @@
       const { xPct, yPct, dur } = JSON.parse(raw);
       const cx = xPct * window.innerWidth;
       const cy = yPct * window.innerHeight;
-
+  
       const cover = document.createElement('div');
       cover.className = 'reveal-cover';
       cover.style.setProperty('--cx', cx + 'px');
       cover.style.setProperty('--cy', cy + 'px');
       cover.style.setProperty('--r', '0px');
       document.body.appendChild(cover);
-
+  
       const maxR = Math.hypot(window.innerWidth, window.innerHeight);
       animateReveal(cover, 0, maxR, dur || 700).then(() => cover.remove());
     })();
-
+  
     // Utility: animate the expanding mask radius
     function animateReveal(cover, from, to, duration) {
       const start = performance.now();
@@ -106,38 +106,38 @@
         requestAnimationFrame(frame);
       });
     }
-
+  
     // --- Sender: handle clicks on internal links with animation + handoff ---
     document.addEventListener('click', function (e) {
       const a = e.target.closest('a.fx, a[href^="/"], a[href^="#"]');
       if (!a) return;
-
+  
       // Respect reduced motion
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
+  
       // Only plain left-click
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
+  
       const href = a.getAttribute('href') || '';
       const url = new URL(href, location.href);
       const isHash = href.startsWith('#');
       const isExternal = url.origin !== location.origin;
-
+  
       // Let external links behave normally (and open in new tab if target set)
       if (isExternal || a.target === '_blank') return;
-
+  
       e.preventDefault();
-
+  
       // Projectile start (clicked link center)
       const rect = a.getBoundingClientRect();
       const startX = rect.left + rect.width / 2;
       const startY = rect.top + rect.height / 2;
-
+  
       // Random on-screen impact point (keep within 15%..85% of viewport)
       const rand = (min, max) => min + Math.random() * (max - min);
       const endX = Math.round(window.innerWidth * rand(0.15, 0.85));
       const endY = Math.round(window.innerHeight * rand(0.15, 0.85));
-
+  
       // Create projectile, fly slowly (1400ms)
       const p = document.createElement('div');
       p.className = 'projectile';
@@ -146,26 +146,24 @@
       requestAnimationFrame(() => {
         p.style.transform = `translate(${endX}px, ${endY}px)`;
       });
-
+  
       p.addEventListener('transitionend', async () => {
         p.remove();
-
-        // Create full-screen cover that we'll "cut a hole" into
-        const cover = document.createElement('div');
-        cover.className = 'reveal-cover';
-        cover.style.setProperty('--cx', endX + 'px');
-        cover.style.setProperty('--cy', endY + 'px');
-        cover.style.setProperty('--r', '0px');
-        document.body.appendChild(cover);
-
-        const flash = document.createElement('div');
-        flash.className = 'flash';
-        document.body.appendChild(flash);
-
-        const maxR = Math.hypot(window.innerWidth, window.innerHeight);
-
-        // For same-page anchors: scroll while covered, then reveal
+  
         if (isHash) {
+          // --- Same-page anchors: use cover to reveal after scrolling ---
+          const cover = document.createElement('div');
+          cover.className = 'reveal-cover';
+          cover.style.setProperty('--cx', endX + 'px');
+          cover.style.setProperty('--cy', endY + 'px');
+          cover.style.setProperty('--r', '0px');
+          document.body.appendChild(cover);
+  
+          const flash = document.createElement('div');
+          flash.className = 'flash';
+          document.body.appendChild(flash);
+  
+          const maxR = Math.hypot(window.innerWidth, window.innerHeight);
           const tgt = document.querySelector(href);
           if (tgt) {
             tgt.scrollIntoView({ block: 'start' });
@@ -175,21 +173,17 @@
           cover.remove(); flash.remove();
           return;
         }
-
-        // For cross-page internal links: save impact point (% of viewport) for receiver
+  
+        // --- Cross-page internal links: save coords and navigate (no cover here) ---
         sessionStorage.setItem('revealEntry', JSON.stringify({
           xPct: endX / window.innerWidth,
           yPct: endY / window.innerHeight,
-          dur: 700  // receiver expand duration
+          dur: 700
         }));
-
-        // Small pre-nav expand for continuity (optional)
-        await animateReveal(cover, 0, window.innerWidth * 0.2, 250);
-
-        // Navigate
         window.location.href = url.href;
       }, { once: true });
     });
   </script>
+  
 </body>
 </html>
