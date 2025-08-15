@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <title>Projects — Tejas Khare</title>
   <style>
+    /* Reveal mask: outside is opaque white, center hole is transparent */
+    .reveal-cover {
+    position: fixed; inset: 0; background: white; z-index: 9998;
+    --cx: 50vw; --cy: 50vh; --r: 0px;
+    mask-image: radial-gradient(circle var(--r) at var(--cx) var(--cy),
+                                transparent 0, transparent calc(var(--r) + 0.1px),
+                                black calc(var(--r) + 0.2px));
+    -webkit-mask-image: radial-gradient(circle var(--r) at var(--cx) var(--cy),
+                                transparent 0, transparent calc(var(--r) + 0.1px),
+                                black calc(var(--r) + 0.2px));
+    }
+    @media (prefers-reduced-motion: reduce) {
+    .reveal-cover { display: none !important; }
+    }
     /* same width + center as index.html */
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
     h1, h2 { margin-top: 40px; }

@@ -22,6 +22,18 @@
                                   transparent 0, transparent calc(var(--r) + 0.1px),
                                   black calc(var(--r) + 0.2px));
     }
+        /* Wipe mask: center is opaque (white), outside is transparent */
+    .wipe-cover {
+    position: fixed; inset: 0; background: white; z-index: 9998;
+    --cx: 50vw; --cy: 50vh; --r: 0px;
+    mask-image: radial-gradient(circle var(--r) at var(--cx) var(--cy),
+                                white 0, white calc(var(--r) + 0.1px),
+                                transparent calc(var(--r) + 0.2px));
+    -webkit-mask-image: radial-gradient(circle var(--r) at var(--cx) var(--cy),
+                                white 0, white calc(var(--r) + 0.1px),
+                                transparent calc(var(--r) + 0.2px));
+    }
+
     /* Optional quick white flash on expand (subtle) */
     .flash {
       position: fixed; inset: 0; background: white; opacity: 0;
@@ -174,13 +186,25 @@
           return;
         }
   
-        // --- Cross-page internal links: save coords and navigate (no cover here) ---
+        // --- Cross-page internal links: wipe old page, then navigate ---
+        const wipe = document.createElement('div');
+        wipe.className = 'wipe-cover';
+        wipe.style.setProperty('--cx', endX + 'px');
+        wipe.style.setProperty('--cy', endY + 'px');
+        wipe.style.setProperty('--r', '0px');
+        document.body.appendChild(wipe);
+
+        // Save impact point for receiver (normalized to viewport)
         sessionStorage.setItem('revealEntry', JSON.stringify({
-          xPct: endX / window.innerWidth,
-          yPct: endY / window.innerHeight,
-          dur: 700
+        xPct: endX / window.innerWidth,
+        yPct: endY / window.innerHeight,
+        dur: 700
         }));
-        window.location.href = url.href;
+
+        const maxR = Math.hypot(window.innerWidth, window.innerHeight);
+        await animateReveal(wipe, 0, maxR, 400);  // quick wipe to white
+        window.location.href = url.href;          // navigate after wipe
+        
       }, { once: true });
     });
   </script>
