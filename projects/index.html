@@ -8,12 +8,27 @@
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
     h1, h2 { margin-top: 40px; }
     hr { margin: 20px 0; }
-    .project { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; }
-    /* .project:nth-of-type(even) { flex-direction: row-reverse; } */
-    .project img { max-width: 45%; height: auto; border-radius: 4px; }
+
+    .project {
+      display: flex;
+      align-items: flex-start;   /* top-align text with image */
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    /* uniform image box so rows look consistent */
+    .project img {
+      width: 160px;              /* fixed width */
+      height: 120px;             /* fixed height */
+      object-fit: contain;       /* keep aspect ratio inside the box */
+      border-radius: 4px;
+      flex: 0 0 160px;           /* reserve space so text column is consistent */
+    }
+
     .project-info { flex: 1; }
     .project-info h3 { margin: 0 0 8px; }
     .project-info p { margin: 0; }
+
     a { color: inherit; text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
@@ -28,25 +43,25 @@
 
     <!-- SearchfulChess -->
     <div class="project">
-      <img src="/images/searchful_chess.png" alt="SearchfulChess Diagram">
+      <img src="/images/searchful_chess.png" alt="SearchfulChess diagram">
       <div class="project-info">
         <h3><a href="https://github.com/TKhare/SearchfulChess">SearchfulChess</a></h3>
         <p>
           Hybrid chess engine that pairs classical <em>alpha–beta</em> search with a transformer-based evaluator
           (JAX/Haiku). Includes move ordering, transposition tables, and cached position evals; supports multiple
-          model sizes (9M–270M params). <!-- source: repo README -->
+          model sizes (9M–270M params).
         </p>
       </div>
     </div>
 
     <!-- Jumpseat -->
     <div class="project">
-      <img src="/images/jumpseat.png" alt="Airplane icon">
+      <img src="/images/jumpseat.png" alt="Jumpseat logo/screenshot">
       <div class="project-info">
         <h3><a href="https://jumpseatapp.com/">Jumpseat</a></h3>
         <p>
-          Travel platform for college students with streamlined flight search and booking helpers; built for fast,
-          student-focused trip planning. Includes airfare tracker powered by EC2 + webscrapers and  <!-- site copy; technical details can be expanded later -->
+          Travel platform for students with streamlined search and booking helpers; includes price prediction (XGBoost)
+          and airfare tracking backed by EC2 + web scrapers.
         </p>
       </div>
     </div>
