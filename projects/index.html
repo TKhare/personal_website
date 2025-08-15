@@ -33,6 +33,40 @@
     a:hover { text-decoration: underline; }
   </style>
 </head>
+<script>
+    (function onLoadReveal() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const raw = sessionStorage.getItem('revealEntry');
+      if (!raw) return;
+      sessionStorage.removeItem('revealEntry');
+      const { xPct, yPct, dur } = JSON.parse(raw);
+      const cx = xPct * window.innerWidth;
+      const cy = yPct * window.innerHeight;
+    
+      const cover = document.createElement('div');
+      cover.className = 'reveal-cover';
+      cover.style.setProperty('--cx', cx + 'px');
+      cover.style.setProperty('--cy', cy + 'px');
+      cover.style.setProperty('--r', '0px');
+      document.body.appendChild(cover);
+    
+      const maxR = Math.hypot(window.innerWidth, window.innerHeight);
+      animateReveal(cover, 0, maxR, dur || 700).then(() => cover.remove());
+    })();
+    
+    function animateReveal(cover, from, to, duration) {
+      const start = performance.now();
+      return new Promise(resolve => {
+        function frame(now) {
+          const t = Math.min(1, (now - start) / duration);
+          const r = from + (to - from) * t;
+          cover.style.setProperty('--r', r + 'px');
+          if (t < 1) requestAnimationFrame(frame); else resolve();
+        }
+        requestAnimationFrame(frame);
+      });
+    }
+</script>    
 <body>
   <div class="container">
     <a href="/">← Home</a>

@@ -8,15 +8,13 @@
     .projectile {
       position: fixed; width: 8px; height: 8px; border-radius: 50%;
       background: black; left: 0; top: 0; transform: translate(-50%,-50%);
-      transition: transform 1400ms cubic-bezier(.2,.7,.1,1); /* ~30% speed (slower) */
+      transition: transform 1400ms cubic-bezier(.2,.7,.1,1); /* slower */
       pointer-events: none; z-index: 9999;
     }
     /* Full-screen cover we "cut a hole" into using a mask */
     .reveal-cover {
       position: fixed; inset: 0; background: white; z-index: 9998;
-      /* Start with a tiny transparent hole at var(--cx), var(--cy) */
       --cx: 50vw; --cy: 50vh; --r: 0px;
-      /* Standard + WebKit masks so the center is transparent (reveals page), outside is opaque */
       mask-image: radial-gradient(circle var(--r) at var(--cx) var(--cy),
                                   transparent 0, transparent calc(var(--r) + 0.1px),
                                   black calc(var(--r) + 0.2px));
@@ -46,8 +44,8 @@
       <tr>
         <td align="left"><strong>Tejas Khare</strong></td>
         <td align="right" style="width: 200px;">
-          <a class="fx" href="projects/">Projects</a> &nbsp;
-          <a class="fx" href="#thoughts">Thoughts</a>
+          <a class="fx" href="/projects/">Projects</a> &nbsp;
+          <a class="fx" href="/journal/">Journal</a>
         </td>
       </tr>
     </table>
@@ -59,27 +57,43 @@
         <br><br>
         I focus on computer systems and machine learning, with the goal of making ML more efficient and ultimately more intelligent.
         <br><br>
-        I also will be <a class="fx" href="/journal/">journal</a>ing my progress on my work and experiences. 
+        I will also be <a class="fx" href="/journal/">journal</a>ing my progress on my work and experiences. 
         <br><br>
-        Check out my <a class="fx" href="#projects">projects</a>!
+        Check out my <a class="fx" href="/projects/">projects</a>!
         <br>
       </p>
     </div>
 
     <!-- Social links (gap, left-aligned) -->
     <div style="margin-top: 40px;">
-      <a class="fx" href="https://github.com/tkhare">Github</a>&nbsp;&nbsp;&nbsp;&nbsp;
-      <a class="fx" href="https://x.com/Tslice0">Twitter</a>
+      <a href="https://github.com/tkhare" target="_blank">Github</a>&nbsp;&nbsp;&nbsp;&nbsp;
+      <a href="https://x.com/Tslice0" target="_blank">Twitter</a>
     </div>
-
-    <!-- Simple anchors so hash links exist -->
-    <div id="projects" style="margin-top: 600px;">Projects section…</div>
-    <div id="thoughts" style="margin-top: 600px;">Thoughts section…</div>
-
   </div>
 
   <script>
-    // Utility: animate the expanding mask radius with JS for broad support
+    // --- Receiver: play reveal on page load if coming from another page ---
+    (function onLoadReveal() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const raw = sessionStorage.getItem('revealEntry');
+      if (!raw) return;
+      sessionStorage.removeItem('revealEntry');
+      const { xPct, yPct, dur } = JSON.parse(raw);
+      const cx = xPct * window.innerWidth;
+      const cy = yPct * window.innerHeight;
+
+      const cover = document.createElement('div');
+      cover.className = 'reveal-cover';
+      cover.style.setProperty('--cx', cx + 'px');
+      cover.style.setProperty('--cy', cy + 'px');
+      cover.style.setProperty('--r', '0px');
+      document.body.appendChild(cover);
+
+      const maxR = Math.hypot(window.innerWidth, window.innerHeight);
+      animateReveal(cover, 0, maxR, dur || 700).then(() => cover.remove());
+    })();
+
+    // Utility: animate the expanding mask radius
     function animateReveal(cover, from, to, duration) {
       const start = performance.now();
       return new Promise(resolve => {
@@ -93,8 +107,9 @@
       });
     }
 
+    // --- Sender: handle clicks on internal links with animation + handoff ---
     document.addEventListener('click', function (e) {
-      const a = e.target.closest('a.fx');
+      const a = e.target.closest('a.fx, a[href^="/"], a[href^="#"]');
       if (!a) return;
 
       // Respect reduced motion
@@ -104,7 +119,12 @@
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
       const href = a.getAttribute('href') || '';
+      const url = new URL(href, location.href);
       const isHash = href.startsWith('#');
+      const isExternal = url.origin !== location.origin;
+
+      // Let external links behave normally (and open in new tab if target set)
+      if (isExternal || a.target === '_blank') return;
 
       e.preventDefault();
 
@@ -113,11 +133,12 @@
       const startX = rect.left + rect.width / 2;
       const startY = rect.top + rect.height / 2;
 
-      // End point: exact center of the viewport (you said this looks perfect)
-      const endX = Math.round(window.innerWidth / 2);
-      const endY = Math.round(window.innerHeight / 2);
+      // Random on-screen impact point (keep within 15%..85% of viewport)
+      const rand = (min, max) => min + Math.random() * (max - min);
+      const endX = Math.round(window.innerWidth * rand(0.15, 0.85));
+      const endY = Math.round(window.innerHeight * rand(0.15, 0.85));
 
-      // Create projectile, fly to center slowly (1400ms)
+      // Create projectile, fly slowly (1400ms)
       const p = document.createElement('div');
       p.className = 'projectile';
       document.body.appendChild(p);
@@ -132,42 +153,41 @@
         // Create full-screen cover that we'll "cut a hole" into
         const cover = document.createElement('div');
         cover.className = 'reveal-cover';
-        // Center of the hole = where the projectile landed
         cover.style.setProperty('--cx', endX + 'px');
         cover.style.setProperty('--cy', endY + 'px');
-        // Start with a tiny hole
         cover.style.setProperty('--r', '0px');
         document.body.appendChild(cover);
 
-        // Optional flash for punch
         const flash = document.createElement('div');
         flash.className = 'flash';
         document.body.appendChild(flash);
 
-        // If this is a same-page link, scroll to the target *while covered* so reveal shows the new section
+        const maxR = Math.hypot(window.innerWidth, window.innerHeight);
+
+        // For same-page anchors: scroll while covered, then reveal
         if (isHash) {
           const tgt = document.querySelector(href);
           if (tgt) {
-            // Jump instantly; no smooth scroll (keeps it minimal and hidden by cover)
             tgt.scrollIntoView({ block: 'start' });
-            // Update the URL hash to match
             if (location.hash !== href) history.replaceState(null, '', href);
           }
+          await animateReveal(cover, 0, maxR, 2000);
+          cover.remove(); flash.remove();
+          return;
         }
 
-        // Compute radius large enough to reveal the whole page
-        const maxR = Math.hypot(window.innerWidth, window.innerHeight);
+        // For cross-page internal links: save impact point (% of viewport) for receiver
+        sessionStorage.setItem('revealEntry', JSON.stringify({
+          xPct: endX / window.innerWidth,
+          yPct: endY / window.innerHeight,
+          dur: 700  // receiver expand duration
+        }));
 
-        // Animate the hole expanding (700ms looks good with the slower projectile)
-        await animateReveal(cover, 0, maxR, 2000);
+        // Small pre-nav expand for continuity (optional)
+        await animateReveal(cover, 0, window.innerWidth * 0.2, 250);
 
-        // Cleanup and navigate if external
-        cover.remove();
-        flash.remove();
-
-        if (!isHash) {
-          window.location.href = href;
-        }
+        // Navigate
+        window.location.href = url.href;
       }, { once: true });
     });
   </script>
